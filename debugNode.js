@@ -29,11 +29,21 @@ function toJsArray(collection) {
   return arr;
 }
 
-// existingSession is a Map<String, String>; handle it as a Java Map or a plain JS object
+// existingSession is a Map<String, String>. Calling keySet() is blocked by the
+// Java class allowlist, so read the keys the JavaScript way instead.
 function getMapKeys(map) {
   if (map == null) return [];
-  if (typeof map.keySet === "function") return toJsArray(map.keySet());
-  return Object.keys(map).filter(function (k) { return typeof map[k] !== "function"; });
+  var keys = [];
+  try {
+    keys = Object.keys(map);
+  } catch (e) {
+    for (var k in map) {
+      keys.push(k);
+    }
+  }
+  return keys
+    .map(function (k) { return String(k); })
+    .filter(function (k) { return typeof map[k] !== "function"; });
 }
 
 function hasExistingSession() {
